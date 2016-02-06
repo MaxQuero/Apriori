@@ -35,7 +35,7 @@ $data = array(
     array('L1', 'L2', 'L5')
 );
 
-//$res_matrix = array_cartesian( $data );
+$res_matrix = array_cartesian( $data );
 
 
 function array_cartesian_product( $arrays )
@@ -85,7 +85,7 @@ function array_cartesian_product( $arrays )
     }
     return $result;
 }
-$data = array(
+$datz = array(
     array('L1', 'L2'),
     array('L1', 'L3'),
     array('L1', 'L5'),
@@ -93,10 +93,19 @@ $data = array(
     array('L2', 'L4'),
     array('L2', 'L5')
 );
-var_dump('ba');
+
 print_r(array_cartesian_product($data));
-var_dump('bj');
 $bdd = new PDO('mysql:host=localhost;dbname=apriori;charset=utf8', 'root', '');
+
+
+$req_nom_prod = $bdd->query('SELECT * FROM comporte INNER JOIN produits WHERE id_panier=1 AND comporte.id_produit=produits.id_produit;');
+
+while ($donnees = $req_nom_prod->fetch()) {
+    print_r(array($donnees['nom_produit']));
+}
+
+
+
 
 //Il faut récupérer le nombre total de produit
 $nbproduitsrep = $bdd->query('SELECT count(*) FROM produits');
@@ -113,7 +122,7 @@ for($i=1; $i<$nbprod+1;$i++){
     $reqSupport->closeCursor();
 
 }
-//print_r($tabSupport);
+print_r($tabSupport);
 
 
 

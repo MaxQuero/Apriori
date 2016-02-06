@@ -70,6 +70,48 @@ class Apriori {
         return $this->maxPhase;
     }
 
+
+
+    private function getDatabaseData(){
+        $bdd = new PDO('mysql:host=localhost;dbname=apriori;charset=utf8', 'root', '');
+
+//Il faut récupérer le nombre total de produit
+
+        $nbpaniersrep = $bdd->query('SELECT count(*) FROM paniers');
+        $nbpan = $nbpaniersrep->fetch()[0];
+
+           // $reqSupport = $bdd->query('SELECT count(*) FROM comporte WHERE id_produit='.$i.';');
+        for($i=1; $i<$nbpan+1;$i++) {
+            $req_nom_prod = $bdd->query('SELECT * FROM comporte INNER JOIN produits WHERE id_panier='.$i.' AND comporte.id_produit=produits.id_produit;');
+            while ($donnees = $req_nom_prod->fetch()) {
+                $tabSupport[$i][] =  $donnees['nom_produit'];
+
+            }
+        }
+        $req_nom_prod->closeCursor(); // Termine le traitement de la requête
+
+        return $tabSupport;
+
+
+    }
+
+    private function setDataToFile($tabData)
+    {
+        $file    = fopen( "fichier.txt", "w" );
+
+        foreach($tabData as $key=>$value){
+            foreach($value as $keyProduct=>$nameProduct){
+
+                fwrite($file,$nameProduct.', ');
+            }
+            fwrite($file, "\n");
+        }
+        fclose($file);
+    }
+
+
+
+
     /**
     1. ???? ?????? ?? ?? ????
     2. ???? ?????? ?? ?? ???? ?? ????? ?? ???
@@ -151,62 +193,76 @@ class Apriori {
         }
 
         $num = count($db);
+
         for($i=0; $i<$num; $i++)
         {
             $tmp  = explode($this->delimiter, $db[$i]);
+
+
             $num1 = count($tmp);
             $x    = array();
             for($j=0; $j<$num1; $j++)
             {
+                //nom_produit
                 $x = trim($tmp[$j]);
+
                 if($x==='')
                 {
                     continue;
                 }
-
+                //s'il existe un élément
                 if(!isset($this->keys['v->k'][$x]))
                 {
+                    //keys = tab de deux sous tableaux :
+                    // [v->k] : [élément] => id et
+                    // [k->v]: [id]=> élement
                     $this->keys['v->k'][$x]         = $counter;
                     $this->keys['k->v'][$counter]   = $x;
                     $counter++;
                 }
-
+                //Si le couple array[contenude[v->k]] (=si array[clé element]) ne contient pas une valeur
                 if(!isset($array[$this->keys['v->k'][$x]]))
                 {
+                    //On l'initialise à 1
                     $array[$this->keys['v->k'][$x]] = 1;
                     $this->allsups[$this->keys['v->k'][$x]] = 1;
                 }
                 else
                 {
+                    //Sinon on incrémente sa valeur (le nombre d'occurence de l'élément)
                     $array[$this->keys['v->k'][$x]]++;
+                    //allups contiendra également le nombre d'occurence de chaque [clé élément] (= id_element)
                     $this->allsups[$this->keys['v->k'][$x]]++;
                 }
-
+                //contient, pour chaque élémént de cahque  panier (chaque ligne) la valeur 1
                 $table[$i][$this->keys['v->k'][$x]] = 1;
+
             }
+
         }
 
         $tmp = array();
+        //On ne garde que les id_éléments de ceux dont le support est > minSupport
         foreach($array as $item => $sup)
         {
+
             if($sup>=$this->minSup)
             {
-
                 $tmp[] = array($item);
             }
-        }
 
+        }
+        //Tableau contenant en value l'id_element de ceux dont le support > minSupport
         $this->allthings[$this->phase] = $tmp;
+        //contient, pour chaque élémént de cahque  panier (chaque ligne) la valeur 1
         $this->table = $table;
+
     }
 
-    /**
-    1. ????? ???????? ?? ?? ???? ?? ????? ????? ?????? ????? ?? ???
-     **/
+    //retourne les supports de TOUS les éléments ET combinaisons d'éléments
     private function scan($arr, $implodeArr = '')
     {
         $cr = 0;
-
         if($implodeArr)
         {
             if(isset($this->allsups[$implodeArr]))
@@ -223,7 +279,6 @@ class Apriori {
                 return $this->allsups[$implodeArr];
             }
         }
-
         $num  = count($this->table);
         $num1 = count($arr);
         for($i=0; $i<$num; $i++)
@@ -245,14 +300,11 @@ class Apriori {
         }
 
         $this->allsups[$implodeArr] = $cr;
-
         return $cr;
 
     }
 
-    /**
-    1. ????? ?? ????? ? ??? ?????? ?????
-     **/
+    /// Ressort toutes les combinaisons possibles entre $arr et $arr2 (avec supprot >minSupport, car ça aura été trié avant)
     private function combine($arr1, $arr2)
     {
         $result = array();
@@ -272,11 +324,12 @@ class Apriori {
         {
             if(!isset($result['k'][$arr2[$i]]))
             {
+                // donne le tab [key]=>id_element
                 $result['v'][] = $arr2[$i];
+                //donne le tab [id_elementt]=>1
                 $result['k'][$arr2[$i]] = 1;
             }
         }
-
         return $result['v'];
     }
 
@@ -360,6 +413,7 @@ class Apriori {
     private function freqItemsets($db)
     {
         $this->fiTime = $this->startTimer();
+
         $this->makeTable($db);
         while(1)
         {
@@ -377,12 +431,11 @@ class Apriori {
                     {
                         continue;
                     }
-
+                    //Sors toutes les combinaisons des éléménts dont support > minSUpport (car allthings contient que ces éléments)
                     $item = $this->combine($this->allthings[$this->phase][$i], $this->allthings[$this->phase][$j]);
                     sort($item);
+
                     $implodeArr = implode($this->delimiter, $item);
-                    var_dump('bite');
-                    print_r($implodeArr);
                     if(!isset($this->freqItmsts[$implodeArr]))
                     {
                         $sup = $this->scan($item, $implodeArr);
@@ -403,58 +456,133 @@ class Apriori {
 
             $this->phase++;
         }
-
+        var_dump('freq');
+        print_r($this->freqItmsts);
         //??? ?????? ??? ????? ?? ?????? ??? ?????? ?? ??? ?? ???
         foreach($this->freqItmsts as $k => $v)
         {
+            //on créé $arr = un sous-ensemble(ex : L1, L2, L5 =3) -> [0]=>L1, [1]=>L2, [2]=>L3
             $arr = explode($this->delimiter, $k);
+            var_dump('arr');
+            print_r($arr);
+            $maxNum=0;
+            //Nombre d'élément dans le sous ensemble
             $num = count($arr);
+            //Si le nombre de sous-éléments > max ce nombre devient nouveau max
+            if($num > $maxNum){
+                $maxNum = $num;
+            }
+
+            var_dump('num');
+            print_r($num);
+
+            //Si l'ensemble traité est >= 3 éléments (ex : {L1, L2, L5} =3)
             if($num>=3)
             {
+                //Affiche les sous-sousensemble possible du tableau passé en paramètre
+                //ex : {L1, L2, L5} = {L1}, {L1,L2}...
                 $subsets = $this->subsets($arr);
+                var_dump('subsets');
+                print_r($subsets);
                 $num1    = count($subsets);
+                var_dump('nu1m');
+                print_r($num1);
+                //Pour chaque sous_ensemble de l'ensemble $arr
                 for($i=0; $i<$num1; $i++)
                 {
+                    var_dump('subset['.$i.']');
+                    var_dump('avant');
+                    print_r($this->freqItmsts);
+                    // nombre d'élements dans le sosu-ensemble $i
+                    //S'il est inférieur à num
                     if(count($subsets[$i])<$num)
                     {
+                        //on enleve le sous élément (ex pour L1, L2, L3 on ne gardera que ce
+                    // sous sous ensemble, et non pas L1; L1,L2 ; L1,L3...
                         unset($this->freqItmsts[implode($this->delimiter, $subsets[$i])]);
+                       // print_r($this->freqItmsts);
+                       // var_dump('fin');
+
+
                     }
                     else
                     {
                         break;
                     }
+                    var_dump('apres');
+                    print_r($this->freqItmsts);
+
                 }
+
             }
+
         }
 
+        //$this->deleteDeprecatedItems($max)
+
+        var_dump('max');
+        print_r($maxNum);
+        $this->deleteDeprecatedItems($maxNum);
+        var_dump('final');
+
+        print_r($this->freqItmsts);
         $this->fiTime = $this->stopTimer($this->fiTime);
     }
 
+    //Si le numMax passé en paramètre >= 3, c'est qu'on va être dans un ensemble >=3-elements
+    //On supprimera donc les support de 2-elements restant qui n'auront pas été unset avant
+    private function deleteDeprecatedItems($numMax){
+        if ($numMax >= 3) {
+            foreach($this->freqItmsts as $k => $v){
+                // On récupère un tab de sous ensemble
+                $arr = explode($this->delimiter, $k);
+                //On compte le nombre d'élément du sous ensemble
+                $num = count($arr);
+                if($num<3){
+                    // SI ce sous ensemble est composé de moins de 3 éléméents on l'unset
+                    unset($this->freqItmsts[implode($this->delimiter, $arr)]);
+                }
+
+            }
+        }
+    }
     /**
     1. ?????? ????? ?? ?? ???? ?? ????? ????? ???????? ?????? ?? ???
      **/
     public function process($db)
     {
+
+        $tabData=$this->getDatabaseData();
         $checked = $result = array();
+        $this->setDataToFile($tabData);
 
         $this->freqItemsets($db);
+       // print_r($this->freqItemsets($db));
+       var_dump('coucou');
+
+
         $this->arTime = $this->startTimer();
 
         foreach($this->freqItmsts as $k => $v)
         {
+
+
             $arr     = explode($this->delimiter, $k);
             $subsets = $this->subsets($arr);
             $num     = count($subsets);
+
             for($i=0; $i<$num; $i++)
             {
                 for($j=0; $j<$num; $j++)
                 {
+
                     if($this->checkRule($subsets[$i], $subsets[$j]))
                     {
                         $n1 = $this->realName($subsets[$i]);
                         $n2 = $this->realName($subsets[$j]);
 
                         $scan = $this->scan($this->combine($subsets[$i], $subsets[$j]));
+
                         $c1   = $this->confidence($this->scan($subsets[$i]), $scan);
                         $c2   = $this->confidence($this->scan($subsets[$j]), $scan);
 
@@ -470,11 +598,11 @@ class Apriori {
 
                         $checked[$n1.$this->delimiter.$n2] = 1;
                         $checked[$n2.$this->delimiter.$n1] = 1;
+
                     }
                 }
             }
         }
-        print_r($result);
         $this->arTime = $this->stopTimer($this->arTime);
 
         return $this->rules = $result;
@@ -608,7 +736,6 @@ class Apriori {
 }
 $Apriori = new Apriori();
 
-$Apriori->process('dataset.txt');
 
 ?>
 </pre>
