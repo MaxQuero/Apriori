@@ -357,7 +357,7 @@ class Apriori {
         }
     }
 
-    //Unset les items qui ne sont pas conforme a ce qui est attendu
+    //Unset les items qui ne sont pas conforme a ce qui est attendu (decrit en com dans la fonction)
     private function freqItemsets($db)
     {
         $this->fiTime = $this->startTimer();
@@ -402,7 +402,6 @@ class Apriori {
             {
                 break;
             }
-
             $this->phase++;
         }
 
@@ -516,6 +515,7 @@ class Apriori {
         return $this->rules = $result;
     }
 
+    //Affichage des Items fréquents et de leur support
     public function printFreqItemsets()
     {
         echo 'Time: '.$this->fiTime.' second(s)<br />===============================================================================<br />';
@@ -544,6 +544,7 @@ class Apriori {
         }
     }
 
+    //Sauvegarde dans le fichier passe en parametre
     public function saveFreqItemsets($filename)
     {
         $content = '';
@@ -574,6 +575,7 @@ class Apriori {
         file_put_contents($filename, $content);
     }
 
+    //Affiche le support et les éléments de chaque sous ensemble final
     public function getFreqItemsets()
     {
         $result = array();
@@ -595,6 +597,7 @@ class Apriori {
         return $result;
     }
 
+    //Affiche les regles d'associations et leurs confiances
     public function printAssociationRules()
     {
         echo 'Time: '.$this->arTime.' second(s)<br />===============================================================================<br />';
@@ -608,6 +611,7 @@ class Apriori {
         }
     }
 
+    //Savegarde les règles d'associations dans un fichier passé en paramètre
     public function saveAssociationRules($filename)
     {
         $content = '';
@@ -623,6 +627,7 @@ class Apriori {
         file_put_contents($filename, $content);
     }
 
+    //Affiches les règles d'association et leur confiance sous forme de tableau
     public function getAssociationRules()
     {
         return $this->rules;

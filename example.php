@@ -16,15 +16,7 @@ $Apriori->setMinSup(2);         //Minimum support 1, 2, 3, ...
 $Apriori->setMinConf(100);       //Minimum confidence - Percent 1, 2, ..., 100
 $Apriori->setDelimiter(',');    //Delimiter 
 
-/*
-Use Array:
-$dataset   = array();
-$dataset[] = array('A', 'B', 'C', 'D'); 
-$dataset[] = array('A', 'D', 'C');  
-$dataset[] = array('B', 'C'); 
-$dataset[] = array('A', 'E', 'C'); 
-$Apriori->process($dataset);
-*/
+
 $Apriori->process('fichier.txt');
 
 //Frequent Itemsets
@@ -41,7 +33,7 @@ $Apriori->printAssociationRules();
 echo '<h3>Association Rules Array</h3>';
 print_r($Apriori->getAssociationRules()); 
 
-//Save to file
+//Sauvegarde dans les fichiers
 $Apriori->saveFreqItemsets('freqItemsets.txt');
 $Apriori->saveAssociationRules('associationRules.txt');
 ?>
