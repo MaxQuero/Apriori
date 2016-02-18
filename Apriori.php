@@ -71,11 +71,11 @@ class Apriori {
     }
 
 
-
+    // Recupere les datas de notre bdd et les inseres dans un tableau, qui sera return
     private function getDatabaseData(){
         $bdd = new PDO('mysql:host=localhost;dbname=apriori;charset=utf8', 'root', '');
 
-//Il faut r�cup�rer le nombre total de produit
+        //Il faut recuperer le nombre total de produit
 
         $nbpaniersrep = $bdd->query('SELECT count(*) FROM paniers');
         $nbpan = $nbpaniersrep->fetch()[0];
@@ -95,6 +95,7 @@ class Apriori {
 
     }
 
+    //Insere les donnees du tableau passe en parametre dans un fichier fichier.txt, selon la forme attendu
     private function setDataToFile($tabData)
     {
         $file    = fopen( "fichier.txt", "w" );
@@ -109,79 +110,7 @@ class Apriori {
         fclose($file);
     }
 
-
-
-
-    /**
-    1. ???? ?????? ?? ?? ????
-    2. ???? ?????? ?? ?? ???? ?? ????? ?? ???
-    3. ????? ?????? ? ????? ???? ?? ?????? ?? ??? - ??? 1
-    ????: ????? ????? ?????? ?????
-     **/
-
-    private function makeTableBase($db)
-    {
-        $table   = array();
-        $array   = array();
-        $counter = 1;
-
-        if(!is_array($db))
-        {
-            $db = file($db);
-        }
-
-        $num = count($db);
-        for($i=0; $i<$num; $i++)
-        {
-            $tmp  = explode($this->delimiter, $db[$i]);
-            $num1 = count($tmp);
-            $x    = array();
-            for($j=0; $j<$num1; $j++)
-            {
-                $x = trim($tmp[$j]);
-                if($x==='')
-                {
-                    continue;
-                }
-
-                if(!isset($this->keys['v->k'][$x]))
-                {
-                    $this->keys['v->k'][$x]         = $counter;
-                    $this->keys['k->v'][$counter]   = $x;
-                    $counter++;
-                }
-
-                if(!isset($array[$this->keys['v->k'][$x]]))
-                {
-                    $array[$this->keys['v->k'][$x]] = 1;
-                    $this->allsups[$this->keys['v->k'][$x]] = 1;
-                }
-                else
-                {
-                    $array[$this->keys['v->k'][$x]]++;
-                    $this->allsups[$this->keys['v->k'][$x]]++;
-                }
-
-                $table[$i][$this->keys['v->k'][$x]] = 1;
-            }
-        }
-
-        $tmp = array();
-        foreach($array as $item => $sup)
-        {
-            if($sup>=$this->minSup)
-            {
-
-                $tmp[] = array($item);
-            }
-        }
-
-        $this->allthings[$this->phase] = $tmp;
-        $this->table = $table;
-    }
-
-
-
+    //Créer un tableau depuis le paramètre passé (nous, nous passerons
     private function makeTable($db)
     {  $table   = array();
         $array   = array();
@@ -210,31 +139,31 @@ class Apriori {
                 {
                     continue;
                 }
-                //s'il existe un �l�ment
+                //s'il existe un element
                 if(!isset($this->keys['v->k'][$x]))
                 {
                     //keys = tab de deux sous tableaux :
-                    // [v->k] : [�l�ment] => id et
-                    // [k->v]: [id]=> �lement
+                    // [v->k] : [element] => id et
+                    // [k->v]: [id]=> element
                     $this->keys['v->k'][$x]         = $counter;
                     $this->keys['k->v'][$counter]   = $x;
                     $counter++;
                 }
-                //Si le couple array[contenude[v->k]] (=si array[cl� element]) ne contient pas une valeur
+                //Si le couple array[contenu de[v->k]] (=si array[cle element]) ne contient pas une valeur
                 if(!isset($array[$this->keys['v->k'][$x]]))
                 {
-                    //On l'initialise � 1
+                    //On l'initialise a 1
                     $array[$this->keys['v->k'][$x]] = 1;
                     $this->allsups[$this->keys['v->k'][$x]] = 1;
                 }
                 else
                 {
-                    //Sinon on incr�mente sa valeur (le nombre d'occurence de l'�l�ment)
+                    //Sinon on incremente sa valeur (le nombre d'occurence de l'element)
                     $array[$this->keys['v->k'][$x]]++;
-                    //allups contiendra �galement le nombre d'occurence de chaque [cl� �l�ment] (= id_element)
+                    //allsups contiendra egalement le nombre d'occurence de chaque [cle element] (= id_element)
                     $this->allsups[$this->keys['v->k'][$x]]++;
                 }
-                //contient, pour chaque �l�m�nt de cahque  panier (chaque ligne) la valeur 1
+                //contient, pour chaque element de cahque  panier (chaque ligne) la valeur 1
                 $table[$i][$this->keys['v->k'][$x]] = 1;
 
             }
@@ -254,12 +183,12 @@ class Apriori {
         }
         //Tableau contenant en value l'id_element de ceux dont le support > minSupport
         $this->allthings[$this->phase] = $tmp;
-        //contient, pour chaque �l�m�nt de cahque  panier (chaque ligne) la valeur 1
+        //contient, pour chaque element de cahque  panier (chaque ligne) la valeur 1
         $this->table = $table;
 
     }
 
-    //retourne les supports de TOUS les �l�ments ET combinaisons d'�l�ments
+    //retourne les supports de TOUS les elements ET combinaisons d'elements de ^$arr
     private function scan($arr, $implodeArr = '')
     {
         $cr = 0;
@@ -304,7 +233,7 @@ class Apriori {
 
     }
 
-    /// Ressort toutes les combinaisons possibles entre $arr et $arr2 (avec supprot >minSupport, car �a aura �t� tri� avant)
+    /// Ressort toutes les combinaisons possibles entre $arr et $arr2 (avec support >minSupport, car ca aura ete trie avant)
     private function combine($arr1, $arr2)
     {
         $result = array();
@@ -333,10 +262,8 @@ class Apriori {
         return $result['v'];
     }
 
-    /**
-    1. ??? ???? ?? ?? ???? ?? ????? ???? ?? ?????? ?? ?? ??????
-    {1,2,3,4} => {A,B,C,D}
-     **/
+
+    //Donne le nom veritable de chaque champ du tableau, plutot que son id
     private function realName($arr)
     {
         $result = '';
@@ -355,6 +282,8 @@ class Apriori {
         return $result;
     }
 
+
+    //Verifie simplement si la regle est valable, pour qu'on sache s'il fuat la tester/verifier ou pas :
     //1-2=>2-3 : false
     //1-2=>5-6 : true
     private function checkRule($a, $b)
@@ -375,11 +304,14 @@ class Apriori {
         return true;
     }
 
+    //Calcule la confiance de l'element grace aux supports passe en parametre
+    //Applique la formule "Conf(X=>Y) = ||X,Y||/||X||
     private function confidence($sup_a, $sup_ab)
     {
         return round(($sup_ab / $sup_a) * 100, 2);
     }
 
+    //Retourne les sous ensemble de chaque sous ensemble
     private function subsets($items)
     {
         $result  = array();
@@ -403,13 +335,29 @@ class Apriori {
                 $result[] = $tmp;
             }
         }
-
         return $result;
     }
 
-    /**
-    1. ???? ????? ?????? ?? ?? ?? ??????
-     **/
+
+    //Si le numMax passe en parametre >= 3, c'est qu'on va �tre dans un ensemble >=3-elements
+    //On supprimera donc les support de 2-elements restant qui n'auront pas �t� unset avant
+    private function deleteDeprecatedItems($numMax){
+        if ($numMax >= 3) {
+            foreach($this->freqItmsts as $k => $v){
+                // On r�cup�re un tab de sous ensemble
+                $arr = explode($this->delimiter, $k);
+                //On compte le nombre d'�l�ment du sous ensemble
+                $num = count($arr);
+                if($num<3){
+                    // SI ce sous ensemble est compos� de moins de 3 �l�m�ents on l'unset
+                    unset($this->freqItmsts[implode($this->delimiter, $arr)]);
+                }
+
+            }
+        }
+    }
+
+    //Unset les items qui ne sont pas conforme a ce qui est attendu
     private function freqItemsets($db)
     {
         $this->fiTime = $this->startTimer();
@@ -431,7 +379,8 @@ class Apriori {
                     {
                         continue;
                     }
-                    //Sors toutes les combinaisons des �l�m�nts dont support > minSUpport (car allthings contient que ces �l�ments)
+                    //Sors toutes les combinaisons des elements dont support > minSUpport (car allthings contient que
+                    // ces elements)
                     $item = $this->combine($this->allthings[$this->phase][$i], $this->allthings[$this->phase][$j]);
                     sort($item);
 
@@ -457,36 +406,36 @@ class Apriori {
             $this->phase++;
         }
 
-        //Pour chaque freqItmsts, on supprime les "sous sous �l�ments"(sauf celui repr�sentant le sous �l�ment lui-m�me)
-        //de chaque sous �l�ments,
-        // si le sous �l�ment est compos� de 3 �l�ments ou plus
+        //Pour chaque freqItmsts, on supprime les "sous sous elements"(sauf celui representant le sous element lui-meme)
+        //de chaque sous elements,
+        // si le sous element est compose de 3 elements ou plus
         foreach($this->freqItmsts as $k => $v)
         {
-            //on cr�� $arr = un sous-ensemble(ex : L1, L2, L5 =3) -> [0]=>L1, [1]=>L2, [2]=>L3
+            //on cree $arr = un sous-ensemble(ex : L1, L2, L5 =3) -> [0]=>L1, [1]=>L2, [2]=>L3
             $arr = explode($this->delimiter, $k);
             $maxNum=0;
-            //Nombre d'�l�ment dans le sous ensemble
+            //Nombre d'element dans le sous ensemble
             $num = count($arr);
-            //Si le nombre de sous-�l�ments > max ce nombre devient nouveau max
+            //Si le nombre de sous-elements > max ce nombre devient nouveau max
             if($num > $maxNum){
                 $maxNum = $num;
             }
 
-            //Si l'ensemble trait� est >= 3 �l�ments (ex : {L1, L2, L5} =3)
+            //Si l'ensemble traite est >= 3 elements (ex : {L1, L2, L5} =3)
             if($num>=3)
             {
-                //Affiche les sous-sousensemble possible du tableau pass� en param�tre
+                //Affiche les sous-sousensemble possible du tableau passe en parametre
                 //ex : {L1, L2, L5} = {L1}, {L1,L2}...
                 $subsets = $this->subsets($arr);
                 $num1    = count($subsets);
                 //Pour chaque sous_ensemble de l'ensemble $arr
                 for($i=0; $i<$num1; $i++)
                 {
-                    // nombre d'�lements dans le sosu-ensemble $i
-                    //S'il est inf�rieur � num
+                    // nombre d'elements dans le sosu-ensemble $i
+                    //S'il est inferieur a num
                     if(count($subsets[$i])<$num)
                     {
-                        //on enleve le sous �l�ment (ex pour L1, L2, L3 on ne gardera que ce
+                        //on enleve le sous element (ex pour L1, L2, L3 on ne gardera que ce
                     // sous sous ensemble, et non pas L1; L1,L2 ; L1,L3...
                         unset($this->freqItmsts[implode($this->delimiter, $subsets[$i])]);
                        // print_r($this->freqItmsts);
@@ -505,38 +454,21 @@ class Apriori {
         }
 
         $this->deleteDeprecatedItems($maxNum);
-
         $this->fiTime = $this->stopTimer($this->fiTime);
     }
 
-    //Si le numMax pass� en param�tre >= 3, c'est qu'on va �tre dans un ensemble >=3-elements
-    //On supprimera donc les support de 2-elements restant qui n'auront pas �t� unset avant
-    private function deleteDeprecatedItems($numMax){
-        if ($numMax >= 3) {
-            foreach($this->freqItmsts as $k => $v){
-                // On r�cup�re un tab de sous ensemble
-                $arr = explode($this->delimiter, $k);
-                //On compte le nombre d'�l�ment du sous ensemble
-                $num = count($arr);
-                if($num<3){
-                    // SI ce sous ensemble est compos� de moins de 3 �l�m�ents on l'unset
-                    unset($this->freqItmsts[implode($this->delimiter, $arr)]);
-                }
-
-            }
-        }
-    }
     //Fonction principale
     public function process($db)
     {
 
         $tabData=$this->getDatabaseData();
-        $checked = $result = array();
+        $checked = array();
+        $result = array();
         $this->setDataToFile($tabData);
 
         $this->freqItemsets($db);
 
-        //Partie sur la confiance et les r�gles d'association
+        //Partie sur la confiance et les regles d'association, en partant sur le même principe
         $this->arTime = $this->startTimer();
 
         foreach($this->freqItmsts as $k => $v)
