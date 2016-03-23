@@ -11,10 +11,10 @@ include 'Apriori.php';
 
 $Apriori = new Apriori();
 
-$Apriori->setMaxScan(3);       //Scan 2, 3, ...
-$Apriori->setMinSup(2);         //Minimum support 1, 2, 3, ...
-$Apriori->setMinConf(100);       //Minimum confidence - Percent 1, 2, ..., 100
-$Apriori->setDelimiter(',');    //Delimiter 
+$Apriori->setMaxScan(3);
+$Apriori->setMinSup(2);
+$Apriori->setMinConf(100);
+$Apriori->setDelimiter(',');
 
 
 $Apriori->process('fichier.txt');

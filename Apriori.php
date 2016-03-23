@@ -1,16 +1,6 @@
 <pre>
 <?php
-/**
- * Apriori Algorithm - ???????? ???????
- * PHP Version 5.0.0
- * Version 0.1 Beta
- * @link http://vtwo.org
- * @author VTwo Group (info@vtwo.org)
- * @license GNU GENERAL PUBLIC LICENSE
- *
- *
- * '-)
- */
+
 class Apriori {
     private $delimiter   = ',';
     private $minSup      = 2;
